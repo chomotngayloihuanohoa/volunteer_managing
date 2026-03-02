@@ -12,13 +12,22 @@ Volunteer and shift management for food pantries. Pantry leads create shifts; pu
 
 ### Development
 
-1. **Backend (Flask)** – from repo root:
+1. **Start MySQL** – from repo root:
    ```bash
-   cd backend && pip install -r requirements.txt && python app.py
+   docker compose up -d mysql
    ```
-   API: `http://localhost:5000/api/...`
 
-2. **Frontend (Vite)** – in another terminal:
+2. **Backend (Flask)** – from repo root:
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   cp .env.example .env
+   python app.py
+   ```
+   API: `http://localhost:5000/api/...`  
+   On startup, the app initializes schema and seeds MySQL from `backend/data/db.json` if the DB is empty.
+
+3. **Frontend (Vite)** – in another terminal:
    ```bash
    cd frontend && npm install && npm run dev
    ```
