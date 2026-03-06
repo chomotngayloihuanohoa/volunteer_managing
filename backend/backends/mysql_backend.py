@@ -190,7 +190,8 @@ class MySQLBackend(StoreBackend):
             cursor = conn.cursor(dictionary=True)
             cursor.execute("SELECT * FROM pantries ORDER BY pantry_id")
             return [_serialize_pantry(row) for row in cursor.fetchall()]
-
+        
+            
     def get_pantry_by_id(self, pantry_id: int) -> dict[str, Any] | None:
         with get_connection() as conn:
             cursor = conn.cursor(dictionary=True)
@@ -313,6 +314,21 @@ class MySQLBackend(StoreBackend):
                     (pantry_id,),
                 )
             return [_serialize_shift(row) for row in cursor.fetchall()]
+        
+    def list_shifts_pantries_without_expired(self, pantry_id: int, include_cancelled: bool = True) -> list[dict[str, Any]]:
+            with get_connection() as conn:
+                cursor = conn.cursor(dictionary=True)
+                if include_cancelled:
+                    cursor.execute(
+                        "SELECT * FROM shifts WHERE pantry_id = %s AND end_time >= NOW() ORDER BY shift_id",
+                        (pantry_id,),
+                    )
+                else:
+                    cursor.execute(
+                        "SELECT * FROM shifts WHERE pantry_id = %s AND status != 'CANCELLED' ORDER BY shift_id",
+                        (pantry_id,),
+                    )
+                return [_serialize_shift(row) for row in cursor.fetchall()]
 
     def get_shift_by_id(self, shift_id: int) -> dict[str, Any] | None:
         with get_connection() as conn:

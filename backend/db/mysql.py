@@ -16,7 +16,7 @@ def mysql_config(include_database: bool = True) -> dict[str, object]:
         "host": os.getenv("MYSQL_HOST", "127.0.0.1"),
         "port": int(os.getenv("MYSQL_PORT", "3306")),
         "user": os.getenv("MYSQL_USER", "volunteer_user"),
-        "password": os.getenv("MYSQL_PASSWORD", "volunteer_pass"),
+        "password": os.getenv("MYSQL_ PASSWORD", "volunteer_pass"),
         "connection_timeout": int(os.getenv("MYSQL_CONNECT_TIMEOUT", "10")),
         "charset": "utf8mb4",
         "collation": "utf8mb4_unicode_ci",

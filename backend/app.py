@@ -36,14 +36,16 @@ def set_current_user() -> None:
     g.current_user_id = user_id
 
 
-def validation_expiration(shift_end_time): 
-    current_end_time = datetime.strptime(shift_end_time, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+def validation_expiration(shift_end_time):
+    current_end_time = datetime.strptime(
+        shift_end_time, "%Y-%m-%dT%H:%M:%SZ"
+    ).replace(tzinfo=timezone.utc)
 
     current_date_time = datetime.now(timezone.utc)
 
-    if current_date_time > shift_end_time :
-        return False 
-    return True 
+    if current_date_time > current_end_time:
+        return True
+    return False
 
 
 def find_user_by_id(user_id: int) -> dict[str, Any] | None:
@@ -382,13 +384,20 @@ def remove_pantry_lead(pantry_id: int, lead_id: int) -> Any:
 def get_shifts(pantry_id: int) -> Any:
     """Get all shifts for a pantry (public - no authorization required)."""
     shifts = backend.list_shifts_by_pantry(pantry_id, include_cancelled=True)
-    current_date_time = datetime.now(timezone.utc)
     for shift in shifts:
-        shift_end_time = shift["end_time"]
-        if not validation_expiration(shift_end_time) :
-             continue 
         shift["roles"] = get_shift_roles(int(shift.get("shift_id")))
+    
     return jsonify(shifts)
+
+@app.get("/api/pantries/valid/<int:pantry_id>/shifts")
+def get_shifts_valid(pantry_id: int) -> Any:
+    """Get all shifts for a pantry (public - no authorization required)."""
+    shifts = backend.list_shifts_pantries_without_expired(pantry_id, include_cancelled=True)
+    for shift in shifts:
+        shift["roles"] = get_shift_roles(int(shift.get("shift_id")))
+    
+    return jsonify(shifts)
+
 
 
 @app.post("/api/pantries/<int:pantry_id>/shifts")
@@ -458,10 +467,6 @@ def get_shift_registrations(shift_id: int) -> Any:
     pantry_id = int(shift.get("pantry_id"))
     
     shift_end_time = shift.get("end_time")
-
-
-    if validation_expiration(shift_end_time) :
-        return jsonify({"error": "Expiration Shift"}), 403
 
 
     if not is_admin and not backend.is_pantry_lead(pantry_id, user_id):
@@ -794,8 +799,6 @@ def get_public_shifts(slug: str) -> Any:
 
 
     for shift in shifts:
-        if not validation_expiration(shift["end_time"]) :
-            continue
         shift["roles"] = get_shift_roles(int(shift.get("shift_id")))
 
     return jsonify(shifts)
